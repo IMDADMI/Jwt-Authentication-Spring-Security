@@ -1,0 +1,40 @@
+we create a class that extends from UsernamePasswordAuthenticationFilter and override both methods attempt and successful authentication
+note that in the authentication manager we define our own implementation about how the user credentials will be verified and when the user
+attempt to authentication we tell the authentication manager to authenticate the user based on our own implementations.
+
+as we said we had override two methods the first one is attempt which is get executed when a user logged in
+    - we get the username and password and let the authentication manager load his data and do the authentication
+    - if the authentication is successfully passed the second method which is the successful method get executed
+    - and here we generate our tokens the access token and the refresh token
+    - the access token is a short-lived token which used to access user roles (5 min)
+    - the refresh token is a long-lived token used for authenticate the user (30 days)
+not we will talk about authorizing and signing the JWT token
+    we will create a class named JwtAuthorizationFilter that extends from OncePerRequestFilter
+    this class contain one single method doFilterInternal which get executed every incoming request
+    so when this method get executed we take the request and extract the jwt token from the header with the Authorization key
+    if the token not exist then this user not even authenticated
+    else we verify the signature and expiration date, if it's a valid token we extract the user claims and authenticate the user in the spring security context.
+now it's time to verify the user authorities
+to verify rest api authorization we have two methods :
+    1- by using the matcher
+         .antMatchers(HttpMethod.POST,"/users/**").hasAuthority("ADMIN")
+         .antMatchers(HttpMethod.GET,"/users/**").hasAnyAuthority("USER","ADMIN")
+    2- by using the annotation
+       and before using these annotation we need to enable then so that we can use them in our code.
+       here is how we can enable them
+          @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true,jsr250Enabled = true)
+       the first annotation that we can use is :
+          @Secured({"ROLE1","ROLE2"}) which we can put it above the method and it means that each user that has either ROLE1 OR ROLE2 can invoke that method
+       the second annotation is :
+          @RolesAllowed({"ROLE1","ROLE2"}) which is equivalent to the above @Secured annotation
+       the third annotations are the PreAuthorize and PostAuthorize both these annotation can use the SPEL the first one is like the others
+       and the last one can check after the result returned from the methods means using EL we can decide if that user is authorized or not :
+
+          @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_EDITOR')")
+          public boolean isValidUsername3(String username) {
+              //...
+          }
+          @PostAuthorize("returnObject.username == authentication.principal.nickName")
+          public CustomUser loadUserDetail(String username) {
+              return userRoleRepository.loadUserByUserName(username);
+          }
