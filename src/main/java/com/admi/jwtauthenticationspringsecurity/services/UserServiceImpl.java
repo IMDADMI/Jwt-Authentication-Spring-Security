@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserService {
         CustomUser c_user = userRepository.findCustomUserByUsername(user);
         CustomRole c_role = roleRepository.findCustomRoleByRoleName(role);
         c_user.getRoles().add(c_role);
+        userRepository.save(c_user);
     }
 
     @Override

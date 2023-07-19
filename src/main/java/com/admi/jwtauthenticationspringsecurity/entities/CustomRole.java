@@ -1,5 +1,6 @@
 package com.admi.jwtauthenticationspringsecurity.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,8 @@ public class CustomRole {
     @Column(name = "role_name")
     private String roleName;
 
-    @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
+    @ManyToMany(mappedBy = "roles",fetch = FetchType.LAZY)
     private List<CustomUser> userList = new ArrayList<>();
 
 

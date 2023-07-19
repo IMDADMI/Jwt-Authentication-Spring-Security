@@ -39,14 +39,15 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                     DecodedJWT jwt = verifier.verify(accessToken);
                     String username = jwt.getSubject();
                     String roles[] = jwt.getClaim("roles").asArray(String.class);
+                    logger.info("the roles of this principle are : {}",roles);
                     Collection<GrantedAuthority> authorities = new ArrayList<>();
                     Arrays.stream(roles).forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     filterChain.doFilter(request, response);
                 } catch (Exception e) {
-                    logger.error("the token is expired");
-                    response.setHeader("error", "the token is expired ");
+                    logger.error("the token is expired \n{}",e.getCause());
+                    response.setHeader("error", e.getMessage());
                     System.out.println();
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 }
