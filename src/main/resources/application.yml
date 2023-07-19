@@ -1,6 +1,0 @@
-database:
-  url: jdbc:mysql://localhost:3306/auth
-  username: root
-  password: @Dmi2020
-  #you can also inject the class as a bean and user the fields to get the values from this property file
-  #that's it
