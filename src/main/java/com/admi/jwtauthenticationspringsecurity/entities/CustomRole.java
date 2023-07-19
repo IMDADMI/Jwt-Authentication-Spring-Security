@@ -21,6 +21,7 @@ public class CustomRole {
     @Column(name = "role_name")
     private String roleName;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private List<CustomUser> userList = new ArrayList<>();
 
