@@ -3,9 +3,8 @@ package com.admi.jwtauthenticationspringsecurity.utils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
-import org.springframework.security.core.GrantedAuthority;
-
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 
 public class SecurityUtils {
     public static final String HMAC_KEY = "#YOUR$KEY@HERE!";

@@ -7,13 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class JwtAuthenticationSpringSecurityApplication {
 
-    @Value("db.username")
-    String ss;
-
     public static void main(String[] args) {
-//        SpringApplication.run(JwtAuthenticationSpringSecurityApplication.class, args);
-        JwtAuthenticationSpringSecurityApplication application = new JwtAuthenticationSpringSecurityApplication();
-        System.out.println(application.ss);
+        SpringApplication.run(JwtAuthenticationSpringSecurityApplication.class, args);
     }
 
 }

@@ -12,7 +12,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,25 +44,30 @@ public class RestController {
         return userService.saveUser(user);
     }
     @PostMapping("/role")
+    @Secured({"ADMIN"})
     public CustomRole addRole(@RequestBody CustomRole role){
         logger.info("adding new role : {}",role);
         return roleService.saveRole(role);
     }
+    @Secured({"ADMIN"})
     @PostMapping("/user/role")
     public void addRoleToUser(@RequestBody RoleToUser roleToUser){
         logger.info("adding a role to a user {} -> {}",roleToUser.getRole(),roleToUser.getUser());
         userService.addRoleToUser(roleToUser.getUser(),roleToUser.getRole());
     }
     @GetMapping("/user")
+    @Secured({"ADMIN","USER"})
     public List<CustomUser> listUsers (){
         logger.info("listing the users");
         return userService.listUsers();
     }
+    @Secured({"ADMIN","USER"})
     @GetMapping("/user/{id}")
     public CustomUser getUserById(@PathVariable String id){
         logger.info("getting the user with the id = {}",id);
         return userService.loadUserById(Long.parseLong(id)).orElse(null);
     }
+    @Secured({"USER"})
     @GetMapping("/token/refresh")
     public void requestAccessToken(HttpServletRequest request,HttpServletResponse response){
         logger.info("requesting to refresh the token");
@@ -82,12 +87,6 @@ public class RestController {
                         request.getRequestURI().toString(),
                         ACCESS_TOKEN_EXPIRATION_TIME
                 );
-//                String newAccessToken = JWT.create()
-//                        .withSubject(user.getUsername())
-//                        .withExpiresAt(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRATION_TIME))
-//                        .withIssuer(request.getRequestURI().toString())
-//                        .withClaim("roles",user.getRoles().stream().map(CustomRole::getRoleName).toList())
-//                        .sign(algorithm);
                 Map<String,String> token = new HashMap<>();
                 token.put("access-token",accessToken);
                 token.put("refresh-token",refreshToken);
