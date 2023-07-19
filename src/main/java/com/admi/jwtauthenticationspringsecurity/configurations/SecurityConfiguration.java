@@ -5,11 +5,13 @@ import com.admi.jwtauthenticationspringsecurity.security.JwtAuthorizationFilter;
 import com.admi.jwtauthenticationspringsecurity.security.CustomeUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,19 +37,21 @@ public class SecurityConfiguration {
         authenticationManager = builder.build();
         return
                 httpSecurity
-                        .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.disable())
+                        .cors(AbstractHttpConfigurer::disable)
+                        .csrf(AbstractHttpConfigurer::disable)
                         .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                         .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions().disable())
                         .authorizeHttpRequests(
                                 authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
-                                        .antMatchers("").permitAll()
+                                        .antMatchers(HttpMethod.POST,"/register/user").permitAll()
+                                        .antMatchers("/token/**","/login/**").permitAll()
                                         .anyRequest().authenticated())
                         .authenticationManager(authenticationManager)
                         .addFilter(new JwtAuthenticationFilter(authenticationManager))
                         .addFilterBefore(new JwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
                         .build();
 
-            }
+    }
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();

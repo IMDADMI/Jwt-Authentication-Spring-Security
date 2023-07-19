@@ -10,6 +10,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +26,7 @@ import static com.admi.jwtauthenticationspringsecurity.utils.SecurityUtils.ACCES
 @org.springframework.web.bind.annotation.RestController
 @CrossOrigin
 public class RestController {
-
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private UserService userService;
     private RoleService roleService;
     private PasswordEncoder passwordEncoder;
@@ -35,29 +37,35 @@ public class RestController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/user")
+    @PostMapping("/register/user")
     public CustomUser addUser(@RequestBody CustomUser user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        logger.info("registering a user : \n{}",user);
         return userService.saveUser(user);
     }
     @PostMapping("/role")
     public CustomRole addRole(@RequestBody CustomRole role){
+        logger.info("adding new role : {}",role);
         return roleService.saveRole(role);
     }
     @PostMapping("/user/role")
     public void addRoleToUser(@RequestBody RoleToUser roleToUser){
+        logger.info("adding a role to a user {} -> {}",roleToUser.getRole(),roleToUser.getUser());
         userService.addRoleToUser(roleToUser.getUser(),roleToUser.getRole());
     }
     @GetMapping("/user")
     public List<CustomUser> listUsers (){
+        logger.info("listing the users");
         return userService.listUsers();
     }
     @GetMapping("/user/{id}")
     public CustomUser getUserById(@PathVariable String id){
+        logger.info("getting the user with the id = {}",id);
         return userService.loadUserById(Long.parseLong(id)).orElse(null);
     }
     @GetMapping("/token/refresh")
     public void requestAccessToken(HttpServletRequest request,HttpServletResponse response){
+        logger.info("requesting to refresh the token");
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             try {
@@ -74,8 +82,6 @@ public class RestController {
                         request.getRequestURI().toString(),
                         ACCESS_TOKEN_EXPIRATION_TIME
                 );
-
-
 //                String newAccessToken = JWT.create()
 //                        .withSubject(user.getUsername())
 //                        .withExpiresAt(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRATION_TIME))
