@@ -13,6 +13,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -37,8 +38,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+        String username = request.getHeader("username");
+        if(username == null)
+            username = "";
+        String password = request.getHeader("password");
+        if(password == null)
+            password = "";
         logger.info("A user is attempting to authenticate");
         logger.info("User info are : username : {},password : {}",username,"*****************");
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username,password);
@@ -46,6 +51,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         return authenticationManager.authenticate(authenticationToken);
     }
 
+    @CrossOrigin
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         logger.info("the authentication passed successfully");
@@ -63,21 +69,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 request.getRequestURI().toString(),
                 REFRESH_TOKEN_EXPIRATION_TIME
         );
-//        String accessToken = JWT.create()
-//                .withSubject(user.getUsername())
-//                .withExpiresAt(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRATION_TIME))
-//                .withIssuer(request.getRequestURI().toString())
-//                .withClaim("roles",user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-//                .sign(algorithm);
-//        String refreshToken = JWT.create()
-//                .withSubject(user.getUsername())
-//                .withExpiresAt(new Date(System.currentTimeMillis()+REFRESH_TOKEN_EXPIRATION_TIME))
-//                .withIssuer(request.getRequestURI().toString())
-//                .sign(algorithm);
+
         Map<String,String> tokens = new HashMap<>();
         tokens.put("access-token",accessToken);
         tokens.put("refresh-token",refreshToken);
         logger.info("sending the tokens to the response header");
+        response.setContentType("application/json");
         new ObjectMapper().writeValue(response.getOutputStream(),tokens);
 
     }

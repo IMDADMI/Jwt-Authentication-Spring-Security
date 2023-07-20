@@ -1,8 +1,12 @@
 package com.admi.jwtauthenticationspringsecurity.configurations;
 
+import com.admi.jwtauthenticationspringsecurity.security.CustomeUserDetailsService;
 import com.admi.jwtauthenticationspringsecurity.security.JwtAuthenticationFilter;
 import com.admi.jwtauthenticationspringsecurity.security.JwtAuthorizationFilter;
-import com.admi.jwtauthenticationspringsecurity.security.CustomeUserDetailsService;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +21,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -35,6 +46,7 @@ public class SecurityConfiguration {
         AuthenticationManagerBuilder builder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
         builder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
         authenticationManager = builder.build();
+//        setBean(authenticationManager);
         return
                 httpSecurity
                         .cors(AbstractHttpConfigurer::disable)
@@ -43,8 +55,8 @@ public class SecurityConfiguration {
                         .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions().disable())
                         .authorizeHttpRequests(
                                 authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
-                                        .antMatchers(HttpMethod.POST,"/register/user").permitAll()
-                                        .antMatchers("/token/**","/login/**").permitAll()
+                                        .antMatchers("/token/**","/boom","/login/**","/register/user","/user/login").permitAll()
+
                                         .anyRequest().authenticated())
                         .authenticationManager(authenticationManager)
                         .addFilter(new JwtAuthenticationFilter(authenticationManager))
@@ -52,6 +64,11 @@ public class SecurityConfiguration {
                         .build();
 
     }
+//    public void setBean(AuthenticationManager authenticationManager){
+//        ApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+//        ConfigurableListableBeanFactory beanFactory = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+//        beanFactory.registerSingleton(authenticationManager.getClass().getCanonicalName(), authenticationManager);
+//    }
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();

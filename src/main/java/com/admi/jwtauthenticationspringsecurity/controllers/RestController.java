@@ -1,9 +1,11 @@
 package com.admi.jwtauthenticationspringsecurity.controllers;
 import com.admi.jwtauthenticationspringsecurity.entities.CustomRole;
 import com.admi.jwtauthenticationspringsecurity.entities.CustomUser;
+import com.admi.jwtauthenticationspringsecurity.services.AuthenticationService;
 import com.admi.jwtauthenticationspringsecurity.services.RoleService;
 import com.admi.jwtauthenticationspringsecurity.services.RoleToUser;
 import com.admi.jwtauthenticationspringsecurity.services.UserService;
+import com.admi.jwtauthenticationspringsecurity.utils.JwtBody;
 import com.admi.jwtauthenticationspringsecurity.utils.SecurityUtils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -12,8 +14,14 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,11 +38,13 @@ public class RestController {
     private UserService userService;
     private RoleService roleService;
     private PasswordEncoder passwordEncoder;
+    private AuthenticationService authenticationService;
 
-    public RestController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
+    public RestController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder, AuthenticationService authenticationService) {
         this.userService = userService;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationService = authenticationService;
     }
 
     @PostMapping("/register/user")
@@ -48,6 +58,27 @@ public class RestController {
     public CustomRole addRole(@RequestBody CustomRole role){
         logger.info("adding new role : {}",role);
         return roleService.saveRole(role);
+    }
+    @PostMapping("/user/login")
+    public ResponseEntity<JwtBody> authenticateUser(@RequestBody CustomUser user) throws Exception {
+        //search for how to execute the filter that is responsible for the /login end point action
+        try {
+            Authentication authentication = authenticationService.attemptAuthentication(user);
+            logger.info("the authentication is done");
+            HttpHeaders headers  = authenticationService.successfulAuthentication(authentication);
+            String accessToken = headers.get("access-token").get(0);
+            String refreshToken = headers.get("refresh-token").get(0);
+            Map<String,String> mapTokens = new HashMap<>();
+            mapTokens.put("accessToken",accessToken);
+            mapTokens.put("refreshToken",refreshToken);
+            String token = new ObjectMapper().writeValueAsString(mapTokens);
+            logger.info("the token is : {} ",token);
+            return new ResponseEntity<>(new JwtBody(token),headers, HttpStatus.OK);
+
+        }catch (BadCredentialsException credentialsException){
+            return new ResponseEntity<>(new JwtBody("invalid credentials"),new HttpHeaders(), HttpStatus.UNAUTHORIZED);
+        }
+
     }
     @Secured({"ADMIN"})
     @PostMapping("/user/role")
