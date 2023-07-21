@@ -32,7 +32,7 @@ import static com.admi.jwtauthenticationspringsecurity.utils.SecurityUtils.ACCES
 
 
 @org.springframework.web.bind.annotation.RestController
-@CrossOrigin (origins = "*" , exposedHeaders = "**")
+//@CrossOrigin (origins = "*" , exposedHeaders = "**")
 public class RestController {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private UserService userService;
@@ -76,9 +76,7 @@ public class RestController {
 
     }
     @GetMapping("/user/list")
-    public List<CustomUser> headerTest(HttpServletRequest request){
-        logger.info("suuu {}",request.getHeader("Authorization"));
-        logger.info("listing the users");
+    public List<CustomUser> listUser(){
         return userService.listUsers();
     }
     @Secured({"ADMIN"})
@@ -87,23 +85,17 @@ public class RestController {
         logger.info("adding a role to a user {} -> {}",roleToUser.getRole(),roleToUser.getUser());
         userService.addRoleToUser(roleToUser.getUser(),roleToUser.getRole());
     }
-    @GetMapping("/user")
-    @Secured({"ADMIN","USER"})
-    public List<CustomUser> listUsers (){
-        logger.info("listing the users");
-        return userService.listUsers();
-    }
     @Secured({"ADMIN","USER"})
     @GetMapping("/user/{id}")
     public CustomUser getUserById(@PathVariable String id){
         logger.info("getting the user with the id = {}",id);
         return userService.loadUserById(Long.parseLong(id)).orElse(null);
     }
-    @Secured({"USER"})
     @GetMapping("/token/refresh")
-    public void requestAccessToken(HttpServletRequest request,HttpServletResponse response){
+    public ResponseEntity<String> requestAccessToken(HttpServletRequest request){
         logger.info("requesting to refresh the token");
         String authorizationHeader = request.getHeader("Authorization");
+        logger.info("the authorization header : {}",authorizationHeader);
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             try {
                 String refreshToken = authorizationHeader.substring(7);
@@ -122,11 +114,15 @@ public class RestController {
                 Map<String,String> token = new HashMap<>();
                 token.put("access-token",accessToken);
                 token.put("refresh-token",refreshToken);
-                new ObjectMapper().writeValue(response.getOutputStream(),token);
+                String tokens = new ObjectMapper().writeValueAsString(token);
+                return new ResponseEntity<>(tokens,HttpStatus.OK);
             } catch (Exception e) {
-
+                return new ResponseEntity<>("bad request",HttpStatus.UNAUTHORIZED);
             }
-        }
+
+        }else
+            return new ResponseEntity<>("the token is expired or the token format is not correct",HttpStatus.UNAUTHORIZED);
+
     }
 
 

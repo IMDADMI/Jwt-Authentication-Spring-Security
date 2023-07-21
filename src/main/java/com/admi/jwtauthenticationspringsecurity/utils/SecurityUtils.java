@@ -25,6 +25,7 @@ public class SecurityUtils {
     }
 
     public static boolean verifyPath(String path) {
+        System.out.println("path : "+path);
         for(String p : ignoredPaths)
             if(p.equals(path))
                 return true;
