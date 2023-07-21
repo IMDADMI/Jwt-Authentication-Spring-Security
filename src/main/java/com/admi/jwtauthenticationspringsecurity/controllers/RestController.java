@@ -76,6 +76,7 @@ public class RestController {
 
     }
     @GetMapping("/user/list")
+    @Secured({"ADMIN","USER"})
     public List<CustomUser> listUser(){
         return userService.listUsers();
     }
