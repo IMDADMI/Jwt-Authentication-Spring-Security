@@ -11,7 +11,7 @@ public class SecurityUtils {
     public static final long ACCESS_TOKEN_EXPIRATION_TIME = 5 * 60 * 1000;
     public static final long REFRESH_TOKEN_EXPIRATION_TIME = 10 * 24 * 3600 * 1000;
     public static final long REMEMBER_ME_REFRESH_TOKEN_EXPIRATION_TIME = 20 * 24 * 3600 * 1000;
-    private static List<String> ignoredPaths = List.of("/token/refresh","/login","/register/user");
+    private static List<String> ignoredPaths = List.of("/token/refresh","/user/login","/register/user");
 
     public static String generateToken (String username, List<String> authorities, String issuer,long expiredAt){
         JWTCreator.Builder token = JWT.create()

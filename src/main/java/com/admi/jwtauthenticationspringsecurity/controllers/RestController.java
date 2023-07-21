@@ -32,7 +32,7 @@ import static com.admi.jwtauthenticationspringsecurity.utils.SecurityUtils.ACCES
 
 
 @org.springframework.web.bind.annotation.RestController
-@CrossOrigin
+@CrossOrigin (origins = "*" , exposedHeaders = "**")
 public class RestController {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private UserService userService;
@@ -68,17 +68,18 @@ public class RestController {
             HttpHeaders headers  = authenticationService.successfulAuthentication(authentication);
             String accessToken = headers.get("access-token").get(0);
             String refreshToken = headers.get("refresh-token").get(0);
-            Map<String,String> mapTokens = new HashMap<>();
-            mapTokens.put("accessToken",accessToken);
-            mapTokens.put("refreshToken",refreshToken);
-            String token = new ObjectMapper().writeValueAsString(mapTokens);
-            logger.info("the token is : {} ",token);
-            return new ResponseEntity<>(new JwtBody(token),headers, HttpStatus.OK);
+            return new ResponseEntity<>(new JwtBody(accessToken,refreshToken),headers, HttpStatus.OK);
 
         }catch (BadCredentialsException credentialsException){
-            return new ResponseEntity<>(new JwtBody("invalid credentials"),new HttpHeaders(), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new JwtBody("invalid credentials","invalid"), HttpStatus.UNAUTHORIZED);
         }
 
+    }
+    @GetMapping("/user/list")
+    public List<CustomUser> headerTest(HttpServletRequest request){
+        logger.info("suuu {}",request.getHeader("Authorization"));
+        logger.info("listing the users");
+        return userService.listUsers();
     }
     @Secured({"ADMIN"})
     @PostMapping("/user/role")

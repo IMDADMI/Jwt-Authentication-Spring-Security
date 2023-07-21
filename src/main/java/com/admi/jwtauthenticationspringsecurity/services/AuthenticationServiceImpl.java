@@ -60,6 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "localhost generated token",
                 ACCESS_TOKEN_EXPIRATION_TIME
         );
+        logger.info("the generated token is : \n{}",accessToken);
         String refreshToken = SecurityUtils.generateToken(
                 user.getUsername(),
                 null,

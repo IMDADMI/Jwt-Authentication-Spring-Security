@@ -28,7 +28,9 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        logger.info("a request is sent to the server");
         String authorizationHeader = request.getHeader("Authorization");
+        logger.info("the Authorization header is : {}",authorizationHeader);
         if(!SecurityUtils.verifyPath(request.getServletPath())){
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 logger.info("a Bearer container request ");

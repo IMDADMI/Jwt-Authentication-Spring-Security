@@ -55,7 +55,7 @@ public class SecurityConfiguration {
                         .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions().disable())
                         .authorizeHttpRequests(
                                 authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
-                                        .antMatchers("/token/**","/boom","/login/**","/register/user","/user/login").permitAll()
+                                        .antMatchers("/token/**","/login/**","/register/user","/user/login").permitAll()
 
                                         .anyRequest().authenticated())
                         .authenticationManager(authenticationManager)
@@ -64,11 +64,7 @@ public class SecurityConfiguration {
                         .build();
 
     }
-//    public void setBean(AuthenticationManager authenticationManager){
-//        ApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-//        ConfigurableListableBeanFactory beanFactory = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-//        beanFactory.registerSingleton(authenticationManager.getClass().getCanonicalName(), authenticationManager);
-//    }
+
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();

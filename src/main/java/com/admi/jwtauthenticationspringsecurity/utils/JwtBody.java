@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JwtBody {
-    String idToken;
+
+    String accessToken;
+    String refreshToken;
 }
 
