@@ -1,10 +1,12 @@
 package com.admi.jwtauthenticationspringsecurity.services;
 
 import com.admi.jwtauthenticationspringsecurity.entities.CustomUser;
+import com.admi.jwtauthenticationspringsecurity.exceptions.AppException;
 import com.admi.jwtauthenticationspringsecurity.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -38,9 +40,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logger.info("authentication the user ...");
         try{
             return managerBuilder.getObject().authenticate(authenticationToken);
-        }catch (BadCredentialsException e){
+        }catch (Exception e){
             logger.error("{} : {}",e.getMessage(),e.getCause());
-            throw e;
+            throw new AppException(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
 
     }
@@ -52,6 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         SecurityContext sc = SecurityContextHolder.getContext();
         sc.setAuthentication(authentication);
         logger.info("the authentication passed successfully");
+        //here get the custom user that u create and ....
         User user = (User) authentication.getPrincipal();
         logger.info("generating jwt access and refresh tokens");
         String accessToken = SecurityUtils.generateToken(

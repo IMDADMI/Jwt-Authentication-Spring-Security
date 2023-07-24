@@ -2,8 +2,10 @@ package com.admi.jwtauthenticationspringsecurity.services;
 
 import com.admi.jwtauthenticationspringsecurity.entities.CustomRole;
 import com.admi.jwtauthenticationspringsecurity.entities.CustomUser;
+import com.admi.jwtauthenticationspringsecurity.exceptions.AppException;
 import com.admi.jwtauthenticationspringsecurity.repositories.RoleRepository;
 import com.admi.jwtauthenticationspringsecurity.repositories.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,20 +28,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<CustomUser> loadUserByUsername(String username) {
-        return Optional.of(userRepository.findCustomUserByUsername(username));
+        return userRepository.findCustomUserByUsername(username);
     }
 
     @Override
     public CustomUser saveUser(CustomUser customUser) {
-        return userRepository.save(customUser);
+        Optional<CustomUser> user = userRepository.findCustomUserByUsername(customUser.getUsername());
+        if(user.isPresent())
+            throw new AppException("user already exist", HttpStatus.BAD_REQUEST);
+        return userRepository.save(user.get());
     }
 
     @Override
     public void addRoleToUser(String user, String role) {
-        CustomUser c_user = userRepository.findCustomUserByUsername(user);
+        Optional<CustomUser> c_user = userRepository.findCustomUserByUsername(user);
         CustomRole c_role = roleRepository.findCustomRoleByRoleName(role);
-        c_user.getRoles().add(c_role);
-        userRepository.save(c_user);
+        c_user.get().getRoles().add(c_role);
+        userRepository.save(c_user.get());
     }
 
     @Override

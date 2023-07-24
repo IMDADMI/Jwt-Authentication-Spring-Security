@@ -1,14 +1,13 @@
 package com.admi.jwtauthenticationspringsecurity.configurations;
 
+import com.admi.jwtauthenticationspringsecurity.aop.CustomAccessDeniedHandler;
+import com.admi.jwtauthenticationspringsecurity.aop.UserAuthenticationEntryPoint;
 import com.admi.jwtauthenticationspringsecurity.security.CustomeUserDetailsService;
-import com.admi.jwtauthenticationspringsecurity.security.JwtAuthenticationFilter;
 import com.admi.jwtauthenticationspringsecurity.security.JwtAuthorizationFilter;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -22,10 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 
@@ -36,6 +33,7 @@ public class SecurityConfiguration {
 
     private AuthenticationManager authenticationManager;
     private CustomeUserDetailsService userDetailsService;
+    private UserAuthenticationEntryPoint userAuthEntryPoint;
 
     public SecurityConfiguration( CustomeUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
@@ -49,17 +47,23 @@ public class SecurityConfiguration {
 
         return
                 httpSecurity
-                        .cors(AbstractHttpConfigurer::disable)
+                        .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()))
+                        //search for how to include this re member me services in your security
+//                        .rememberMe(httpSecurityRememberMeConfigurer -> httpSecurityRememberMeConfigurer.rememberMeServices(new RememberMeSer()))
+                        //we can create our custom error message when a security problem occurs
+                        .exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
+                                httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(userAuthEntryPoint))
                         .csrf(AbstractHttpConfigurer::disable)
                         .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                         .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions().disable())
                         .authorizeHttpRequests(
                                 authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
-                                        .antMatchers("/token/refresh","/login/**","/user/list","/register/user","/user/login").permitAll()
+                                        .antMatchers("/token/refresh","/login/**","/register/user","/user/login").permitAll()
 
                                         .anyRequest().authenticated())
                         .authenticationManager(authenticationManager)
-                        .addFilter(new JwtAuthenticationFilter(authenticationManager))
+//                        .addFilter(new JwtAuthenticationFilter(authenticationManager))
+                        //this filter get executed once per request and before other security filer in the filter chain
                         .addFilterBefore(new JwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
                         .build();
 
@@ -70,15 +74,54 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedHeaders("X-Requested-With", "Origin", "Content-Type", "Accept", "Authorization")
-                        .allowedMethods("POST", "OPTIONS", "GET", "DELETE", "PUT");
-            }
-        };
+    public FilterRegistrationBean corsConfigurer() {
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.addAllowedOrigin("http://localhost:5173");
+        corsConfiguration.setAllowedHeaders(Arrays.asList(HttpHeaders.AUTHORIZATION,HttpHeaders.CONTENT_TYPE,HttpHeaders.ACCEPT));
+        corsConfiguration.setAllowedMethods(Arrays.asList(
+                HttpMethod.GET.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.DELETE.name(),
+                HttpMethod.POST.name()
+        ));
+        corsConfiguration.setMaxAge(3600L);
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**",corsConfiguration);
+        FilterRegistrationBean bean =  new FilterRegistrationBean(new CorsFilter(urlBasedCorsConfigurationSource));
+        //because the request may be rejected by other filters before this cors filter
+        bean.setOrder(-102);
+        return bean;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

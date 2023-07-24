@@ -1,9 +1,11 @@
 package com.admi.jwtauthenticationspringsecurity.security;
 
 import com.admi.jwtauthenticationspringsecurity.entities.CustomUser;
+import com.admi.jwtauthenticationspringsecurity.exceptions.AppException;
 import com.admi.jwtauthenticationspringsecurity.services.UserServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -28,10 +30,11 @@ public class CustomeUserDetailsService implements UserDetailsService {
         CustomUser user = service.loadUserByUsername(username).orElse(null);
         if(user == null){
             logger.error("the user cannot be found");
-            throw new UsernameNotFoundException("the user is null");
+            throw new AppException("the user cannot be found", HttpStatus.NOT_FOUND);
         }
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         user.getRoles().forEach(r->authorities.add(new SimpleGrantedAuthority(r.getRoleName())));
+        //create a custom user class which implement the user details
         return new User(user.getUsername(),user.getPassword(),authorities);
 
     }
