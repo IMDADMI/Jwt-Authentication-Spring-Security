@@ -3,7 +3,8 @@
 
 This is the backend part of the jwt security method you can view the front part in the Jwt-Authentication repository in admi branch
 ### You can view the backend part in the repository **Jwt-Authentication-Spring-Security** 
-
+**please make sure to add the roles (USER,ADMIN) and the admin user manually using the api**
+***please make sure to add your database configuration in the Application.properties file ***
 
 
 ## Demo
